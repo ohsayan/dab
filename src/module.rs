@@ -110,18 +110,27 @@ fn patch_file<W: Write>(
             Error::Other("Your source file possibly has a syntax error".to_string())
         })? + 2;
 
+        let mut add_lf_after_comment = false;
         if contents.as_bytes().get(comment_end_idx + 1) == Some(&b'\n') {
             comment_end_idx += 1;
+        } else {
+            add_lf_after_comment = true;
         }
 
         // append the comment
         file.write_all(&contents.as_bytes()[..comment_end_idx])?;
+        if add_lf_after_comment {
+            file.write_all(b"\n")?;
+        }
 
         // One LF for the comment end line
         file.write_all(b"\n")?;
 
         // now write the module declaration
         file.write_all(mod_decl.as_bytes())?;
+        if add_lf_after_comment {
+            file.write_all(b"\n")?;
+        }
         // now write the remaining data
         file.write_all(&contents.as_bytes()[comment_end_idx..])?;
     } else {
@@ -215,9 +224,60 @@ fn main() {
 "#;
     let mut v = Vec::new();
     patch_file("z", FILE_WITH_COMMENT, options, &mut v).unwrap();
-    fs::File::create("resulting_file.rs")
-        .unwrap()
-        .write_all(&v)
-        .unwrap();
+    assert_eq!(String::from_utf8_lossy(&v), FILE_WITH_COMMENT_PATCHED);
+}
+
+#[test]
+#[allow(clippy::field_reassign_with_default)]
+fn file_with_comment_nolf_patch() {
+    let mut options = ModuleOptions::default();
+    options.from_comment_header_bottom = true;
+    const FILE_WITH_COMMENT: &str = r#"/*
+* Copyright (c) 2022, Sayan Nandan <nandansayan@outlook.com>
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/mod x;
+mod y;
+
+fn main() {
+    println!("Hello, World");
+}
+"#;
+    const FILE_WITH_COMMENT_PATCHED: &str = r#"/*
+* Copyright (c) 2022, Sayan Nandan <nandansayan@outlook.com>
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+
+mod z;
+mod x;
+mod y;
+
+fn main() {
+    println!("Hello, World");
+}
+"#;
+    let mut v = Vec::new();
+    patch_file("z", FILE_WITH_COMMENT, options, &mut v).unwrap();
     assert_eq!(String::from_utf8_lossy(&v), FILE_WITH_COMMENT_PATCHED);
 }
