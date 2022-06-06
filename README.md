@@ -8,6 +8,7 @@ it does one very simple thing: create modules.
 - [x] Create modules in binary/library packages
 - [x] Choose if module is public/private (private by default)
 - [x] Ignore comments on top of file while adding modules ("license headers")
+- [ ] Rewrite using `syn`
 - [ ] Support full paths to deeply nested modules
 - [ ] Enable parent creation if it doesn't exist
 - [ ] Auto add file-header comments ("license headers" for example) to newly create modules
