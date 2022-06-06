@@ -54,9 +54,15 @@ impl ModuleOptions {
 /// Create the module using the provided `root_file_path`, path segments and the module options
 pub fn create_module(
     root_file_path: &str,
-    path_segments: Vec<&str>,
+    path_segments: &[&str],
     options: ModuleOptions,
 ) -> Result<()> {
+    if path_segments
+        .iter()
+        .any(|segment| utils::validate_module_name(segment).is_err())
+    {
+        return Error::bad_module_name();
+    }
     if path_segments.len() != 1 {
         // TODO(@ohsayan): Support nested modules
         return Error::other(

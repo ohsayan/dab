@@ -14,7 +14,9 @@ it does one very simple thing: create modules.
 - [ ] Provide a `dab.toml` configuration that will be read for determining settings
 - [ ] Run `rustfmt` on adding `mod` entry to the root file
 - [ ] Support workspaces:
-  - [ ] Support creating modules by package name (`skyd::protocol`)
+  - [x] Support creating modules by package name (`skyd::protocol`)
+  - [ ] Detect workspace root and operate from any other directory (much like what `cargo` does)
+  - [ ] Support creation of packages in workspaces
 - [ ] Open code editor to the newly created module
 - Have ideas? [Create an issue!](https://github.com/skytable/dab/issues/new)
 

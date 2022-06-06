@@ -15,7 +15,7 @@
 */
 
 use {
-    crate::{module::ModuleOptions, package, utils, Error, Result},
+    crate::{module::ModuleOptions, package, workspace, Error, Result},
     cargo_toml::Manifest,
     std::{collections::HashSet, fs},
 };
@@ -73,15 +73,14 @@ pub fn run(args: Vec<String>) -> Result<()> {
 
     // validate module name
     let module = module.unwrap();
-    utils::validate_module_name(module)?;
 
     // read Cargo.toml
     let read_file = fs::read_to_string("Cargo.toml")
         .map_err(|_| Error::Other("Couldn't read `Cargo.toml`".to_owned()))?;
     let crate_cfg = Manifest::from_str(&read_file)?;
     if crate_cfg.package.is_some() {
-        package::create_module_in_package(module, modoption)
+        package::create_module_in_package(module, modoption, crate_cfg.package.unwrap())
     } else {
-        Err(Error::Other("workspaces are not supported yet".to_owned()))
+        workspace::create_module_in_workspace(module, modoption, crate_cfg.workspace.unwrap())
     }
 }

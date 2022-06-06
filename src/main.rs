@@ -14,6 +14,7 @@
  * limitations under the License.
 */
 
+mod workspace;
 #[macro_use]
 mod macros;
 mod errors;

@@ -14,15 +14,26 @@
  * limitations under the License.
 */
 
-use crate::{
-    module::{self, ModuleOptions},
-    utils, Error, Result,
-};
 #[cfg(test)]
 use std::{fs, io::Write, path::Path, process::Command};
+use {
+    crate::{
+        module::{self, ModuleOptions},
+        utils, Error, Result,
+    },
+    cargo_toml::Package,
+};
 
 /// Create a module in a package (not a workspace)
-pub fn create_module_in_package(path: &str, options: ModuleOptions) -> Result<()> {
+pub fn create_module_in_package(
+    path: &str,
+    options: ModuleOptions,
+    _package: Package,
+) -> Result<()> {
+    _create_module_in_package(path, options)
+}
+
+fn _create_module_in_package(path: &str, options: ModuleOptions) -> Result<()> {
     // find module directory and file paths
     let path_segments: Vec<&str> = path.split("::").collect();
     let has_empty = path_segments.iter().any(|s| s.is_empty());
@@ -33,12 +44,12 @@ pub fn create_module_in_package(path: &str, options: ModuleOptions) -> Result<()
     }
     let root_file_name = utils::get_root_file_name()?;
     // create the module
-    module::create_module(root_file_name, path_segments, options)
+    module::create_module(root_file_name, &path_segments, options)
 }
 
 #[test]
 fn create_module_in_package_test() {
-    create_module_in_package("protocol", ModuleOptions::default()).unwrap();
+    _create_module_in_package("protocol", ModuleOptions::default()).unwrap();
     assert!(Path::new("src/protocol").is_dir());
     assert!(Path::new("src/protocol/mod.rs").is_file());
     let cmd = Command::new("cargo").arg("build").output().unwrap();
