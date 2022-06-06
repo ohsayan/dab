@@ -6,6 +6,9 @@ authors = ["Sayan Nandan <nandansayan@outlook.com>"]
 license = "Apache-2.0"
 repository = "https://github.com/ohsayan/dab"
 readme = "README.md"
+description = "CLI tool for a Rustacean's everyday things"
+keywords = ["cli", "terminal", "rust"]
+categories = ["Development tools"]
 
 [dependencies]
 cargo_toml = "0.11.5"
