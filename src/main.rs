@@ -17,6 +17,7 @@
 #[macro_use]
 mod macros;
 mod errors;
+mod module;
 mod package;
 mod runner;
 mod utils;

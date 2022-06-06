@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
 use {
-    crate::{package, utils, Error, Result},
+    crate::{module::ModuleOptions, package, utils, Error, Result},
     cargo_toml::Manifest,
     std::{collections::HashSet, fs},
 };
 
+/// The help menu
 const HELP: &str = "\
 dab 0.1.0
 Sayan Nandan <ohsayan@outlook.com>
@@ -37,24 +39,7 @@ FLAGS:
     --public,-P  Make the new module public
 ";
 
-#[derive(Debug, Default)]
-pub struct ModuleOptions {
-    pub is_public: bool,
-    pub is_help: bool,
-}
-
-impl ModuleOptions {
-    const FLAG_COUNT: usize = 2;
-    fn process_options(&mut self, flags: &HashSet<&str>) -> Result<()> {
-        self.is_public = flags.contains("public") || flags.contains("P");
-        self.is_help = flags.contains("help");
-        if flags.len() > Self::FLAG_COUNT {
-            return Error::other("Unknown flags");
-        }
-        Ok(())
-    }
-}
-
+/// Run `dab` using the provided source of arguments (useful for testing)
 pub fn run(args: Vec<String>) -> Result<()> {
     if args.is_empty() {
         return Error::other("Incorrect number of arguments. Run `--help` for usage");

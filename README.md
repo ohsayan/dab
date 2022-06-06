@@ -7,10 +7,11 @@ it does one very simple thing: create modules.
 
 - [x] Create modules in binary/library packages
 - [x] Choose if module is public/private (private by default)
-- [ ] Ignore comments on top of file while adding modules ("license headers")
+- [x] Ignore comments on top of file while adding modules ("license headers")
 - [ ] Support full paths to deeply nested modules
 - [ ] Enable parent creation if it doesn't exist
 - [ ] Auto add file-header comments ("license headers" for example) to newly create modules
+- [ ] Provide a `dab.toml` configuration that will be read for determining settings
 - [ ] Run `rustfmt` on adding `mod` entry to the root file
 - [ ] Support workspaces:
   - [ ] Support creating modules by package name (`skyd::protocol`)

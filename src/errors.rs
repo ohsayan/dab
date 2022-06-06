@@ -23,18 +23,26 @@ use std::{
 pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug)]
+/// Errors arising from running `dab`
 pub enum Error {
+    /// The module path has empty elements
     EmptyPath,
+    /// Some other custom erro
     Other(String),
+    /// Error from parsing `Cargo.toml`
     CargoTomlError(cargo_toml::Error),
+    /// An I/O error
     IoError(IoError),
+    /// The module name was illegal
     BadModuleName,
 }
 
 impl Error {
+    /// Shorthand for a result with `Self::Other`
     pub fn other<T>(e: impl ToString) -> Result<T> {
         Err(Self::Other(e.to_string()))
     }
+    /// Shorthand for a result with `Self::BadModuleName`
     pub fn bad_module_name<T>() -> Result<T> {
         Err(Self::BadModuleName)
     }

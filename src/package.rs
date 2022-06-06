@@ -14,17 +14,14 @@
  * limitations under the License.
 */
 
-#[cfg(test)]
-use std::{path::Path, process::Command};
-use {
-    crate::{
-        runner::ModuleOptions,
-        utils::{self, add_mod_rs},
-        Error, Result,
-    },
-    std::{fs, io::Write},
+use crate::{
+    module::{self, ModuleOptions},
+    utils, Error, Result,
 };
+#[cfg(test)]
+use std::{fs, io::Write, path::Path, process::Command};
 
+/// Create a module in a package (not a workspace)
 pub fn create_module_in_package(path: &str, options: ModuleOptions) -> Result<()> {
     // find module directory and file paths
     let path_segments: Vec<&str> = path.split("::").collect();
@@ -35,31 +32,8 @@ pub fn create_module_in_package(path: &str, options: ModuleOptions) -> Result<()
         return Err(Error::EmptyPath);
     }
     let root_file_name = utils::get_root_file_name()?;
-
-    if path_segments.len() == 1 {
-        // this is wrt the package root
-        let dirpath = "src/".to_owned() + path_segments[0];
-        let filepath = add_mod_rs(&dirpath);
-
-        // create the module directory (src/<mod>/)
-        fs::create_dir(&dirpath)?;
-        // create the module file
-        fs::File::create(filepath)?;
-        // append the module entry to the top of the main.rs file
-        utils::cowfile(root_file_name, |file, contents| {
-            let mod_decl = if options.is_public {
-                format!("pub mod {};\n", path_segments[0])
-            } else {
-                format!("mod {};\n", path_segments[0])
-            };
-            file.write_all(mod_decl.as_bytes())?;
-            file.write_all(contents.as_bytes())?;
-            Ok(())
-        })?;
-        Ok(())
-    } else {
-        Err(Error::Other("modules other than the root aren't supported yet. this will be implemented in a future version".to_string()))
-    }
+    // create the module
+    module::create_module(root_file_name, path_segments, options)
 }
 
 #[test]
@@ -75,7 +49,8 @@ fn create_module_in_package_test() {
     );
     utils::cowfile("src/main.rs", |file, contents| {
         let contents = contents.to_owned().replace("mod protocol;\n", "");
-        file.write_all(contents.as_bytes())
+        file.write_all(contents.as_bytes())?;
+        Ok(())
     })
     .unwrap();
     fs::remove_dir_all("src/protocol").unwrap();
