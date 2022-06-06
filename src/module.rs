@@ -43,7 +43,7 @@ impl ModuleOptions {
         self.is_public = flags.contains("public") || flags.contains("P"); // 2
         self.is_help = flags.contains("help"); // 1
         self.from_comment_header_bottom = flags.contains("cskip") || flags.contains("C"); // 2
-        self.no_mod_folder = flags.contains("fskip") || flags.contains("F"); // 2
+        self.no_mod_folder = flags.contains("dskip") || flags.contains("D"); // 2
         if flags.len() > Self::FLAG_COUNT {
             return Error::other("Unknown flags");
         }

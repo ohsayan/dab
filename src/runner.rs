@@ -37,6 +37,8 @@ USAGE:
 FLAGS:
     --help       Prints help information
     --public,-P  Make the new module public
+    --cskip,-C   Skip the comment header (if any)
+    --dskip,-D   Skip creating module directory (only module.rs)  
 ";
 
 /// Run `dab` using the provided source of arguments (useful for testing)
