@@ -1,10 +1,10 @@
-# `dab`: The pursuit of laziness for Rust developers
+# `dab`: The pursuit of laziness for Rustaceans
 
 ![Crates.io](https://img.shields.io/crates/v/dab?style=for-the-badge) ![Crates.io](https://img.shields.io/crates/l/dab?style=for-the-badge) ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/ohsayan/dab/test?style=for-the-badge)
 
 `dab` is a command-line tool that is intended for Rust developers to savor their much deserved laziness
 after fighting with `async` lifetimes or FFI. Right now, it does one very simple thing: create modules.
-Silly? [Read this](#background).
+Well, I got a little mad creating modules while I was [working on Skytable](https://github.com/skytable/skytable). Silly? [Read this](#background)!
 
 ## Installation 🚀
 
@@ -13,6 +13,15 @@ Simply run:
 ```shell
 $ cargo install dab
 ```
+
+## Usage
+
+- Basic usage example: `dab modname`. This will create a `src/modname/mod.rs` file along with
+  a module declaration (like `mod modname`) in the "root file" which is either `lib.rs`
+  or `main.rs` depending on your crate type
+- Advanced usage example: `dab -cskip --dskip --public mymod`: This will create a `src/mymod.rs`
+  file (note no directory creation), skip a license header in the "root file" (if any) and mark
+  the module visibility to be `pub`
 
 ## Features ✨
 
@@ -25,6 +34,7 @@ $ cargo install dab
 - [ ] Auto add file-header comments ("license headers" for example) to newly create modules
 - [ ] Provide a `dab.toml` configuration that will be read for determining settings
 - [ ] Run `rustfmt` on adding `mod` entry to the root file
+- [ ] Support `cfg` attributes
 - [ ] Support workspaces:
   - [x] Support creating modules by package name (`skyd::protocol`)
   - [ ] Detect workspace root and operate from any other directory (much like what `cargo` does)
@@ -32,7 +42,7 @@ $ cargo install dab
 - [ ] Open code editor to the newly created module
 - Have ideas? [Create an issue!](https://github.com/skytable/dab/issues/new)
 
-## Background 📑
+## Background
 
 Call it my personal itch, in large Rust projects I've been extremely annoyed while creating modules (especially in workspaces). The usual sequence was:
 
