@@ -87,33 +87,137 @@ pub fn create_module(
 
     // append the module entry to the top of the main.rs file
     utils::cowfile(root_file_path, |file, contents| {
-        let mod_decl = if options.is_public {
-            format!("pub mod {};", path_segments[0])
-        } else {
-            format!("mod {};", path_segments[0])
-        };
-        if contents.starts_with("/*") && options.from_comment_header_bottom {
-            // starts with a comment and we have to append below it
-            let mut comment_end_idx = contents.find("*/").ok_or_else(|| {
-                Error::Other("Your source file possibly has a syntax error".to_string())
-            })? + 2;
-            // append the comment
-            file.write_all(&contents.as_bytes()[..comment_end_idx])?;
-            if contents.as_bytes().get(comment_end_idx + 1) == Some(&b'\n') {
-                comment_end_idx += 1;
-            }
-            // One LF for the comment end line and the next LF for a break between
-            // the mod decl (to make it look nice)
-            file.write_all(b"\n\n")?;
-            // now write the module declaration
-            file.write_all(mod_decl.as_bytes())?;
-            // now write the remaining data
-            file.write_all(&contents.as_bytes()[comment_end_idx..])?;
-        } else {
-            file.write_all(mod_decl.as_bytes())?;
-            file.write_all(contents.as_bytes())?;
-        }
-        Ok(())
+        patch_file(path_segments[0], contents, options, file)
     })?;
     Ok(())
+}
+
+/// Patch the file with the updated data
+fn patch_file<W: Write>(
+    final_module_name: &str,
+    contents: &str,
+    options: ModuleOptions,
+    file: &mut W,
+) -> Result<()> {
+    let mod_decl = if options.is_public {
+        format!("pub mod {};", final_module_name)
+    } else {
+        format!("mod {};", final_module_name)
+    };
+    if contents.starts_with("/*") && options.from_comment_header_bottom {
+        // starts with a comment and we have to append below it
+        let mut comment_end_idx = contents.find("*/").ok_or_else(|| {
+            Error::Other("Your source file possibly has a syntax error".to_string())
+        })? + 2;
+
+        if contents.as_bytes().get(comment_end_idx + 1) == Some(&b'\n') {
+            comment_end_idx += 1;
+        }
+
+        // append the comment
+        file.write_all(&contents.as_bytes()[..comment_end_idx])?;
+
+        // One LF for the comment end line
+        file.write_all(b"\n")?;
+
+        // now write the module declaration
+        file.write_all(mod_decl.as_bytes())?;
+        // now write the remaining data
+        file.write_all(&contents.as_bytes()[comment_end_idx..])?;
+    } else {
+        file.write_all(mod_decl.as_bytes())?;
+        file.write_all(b"\n")?;
+        file.write_all(contents.as_bytes())?;
+    }
+    Ok(())
+}
+
+#[test]
+#[allow(clippy::field_reassign_with_default)]
+fn file_without_comment_patch() {
+    let mut options = ModuleOptions::default();
+    options.from_comment_header_bottom = true;
+    const FILE_WITHOUT_COMMENT: &str = "\
+mod x;
+mod y;
+
+fn main() {
+    println!(\"Hello, World\");
+}
+
+";
+    const FILE_WITHOUT_COMMENT_PATCHED: &str = "\
+mod z;
+mod x;
+mod y;
+
+fn main() {
+    println!(\"Hello, World\");
+}
+
+";
+    let mut v = Vec::new();
+    patch_file("z", FILE_WITHOUT_COMMENT, options, &mut v).unwrap();
+    assert_eq!(String::from_utf8_lossy(&v), FILE_WITHOUT_COMMENT_PATCHED);
+}
+
+#[test]
+#[allow(clippy::field_reassign_with_default)]
+fn file_with_comment_patch() {
+    let mut options = ModuleOptions::default();
+    options.from_comment_header_bottom = true;
+    const FILE_WITH_COMMENT: &str = r#"/*
+* Copyright (c) 2022, Sayan Nandan <nandansayan@outlook.com>
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+
+mod x;
+mod y;
+
+fn main() {
+    println!("Hello, World");
+}
+"#;
+    const FILE_WITH_COMMENT_PATCHED: &str = r#"/*
+* Copyright (c) 2022, Sayan Nandan <nandansayan@outlook.com>
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+
+mod z;
+mod x;
+mod y;
+
+fn main() {
+    println!("Hello, World");
+}
+"#;
+    let mut v = Vec::new();
+    patch_file("z", FILE_WITH_COMMENT, options, &mut v).unwrap();
+    fs::File::create("resulting_file.rs")
+        .unwrap()
+        .write_all(&v)
+        .unwrap();
+    assert_eq!(String::from_utf8_lossy(&v), FILE_WITH_COMMENT_PATCHED);
 }
