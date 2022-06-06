@@ -14,58 +14,21 @@
  * limitations under the License.
 */
 
-mod errors;
-mod package;
-mod utils;
 #[macro_use]
 mod macros;
+mod errors;
+mod package;
+mod runner;
+mod utils;
 
-use errors::{Error, Result};
 use {
-    cargo_toml::Manifest,
-    std::{env, fs},
+    errors::{Error, Result},
+    std::env,
 };
-
-const HELP: &str = "\
-dab 0.1.0
-Sayan Nandan <ohsayan@outlook.com>
-dab is a command-line tool for Rust developers that can be used to create modules by paths.
-
-Example usage:
-- `dab errors`: Will create a file under src/errors/mod.rs (along with the directory) while
-also adding `mod errors.rs` to the root file (`lib.rs` or `main.rs` depending on the package
-type)
-
-USAGE:
-    dab [FLAGS]
-
-FLAGS:
-    --help  Prints help information
-";
 
 fn main() {
     let args: Vec<String> = env::args().skip(1).collect();
-    if args.len() != 1 {
-        exiterr!("Incorrect number of arguments. Run `--help` for usage");
-    }
-    run(args)
+    runner::run(args)
         .map_err(|e| exiterr!("Failed with error: {e}"))
         .unwrap();
-}
-
-fn run(args: Vec<String>) -> Result<()> {
-    if args[0].as_str() == "--help" {
-        println!("{HELP}");
-        return Ok(());
-    }
-    // read Cargo.toml
-    let read_file = fs::read_to_string("Cargo.toml")
-        .map_err(|_| Error::Other("Couldn't read `Cargo.toml`".to_owned()))?;
-    // FIXME(@ohsayan): This is for future validation
-    let crate_cfg = Manifest::from_str(&read_file)?;
-    if crate_cfg.package.is_some() {
-        package::create_module_in_package(&args[0])
-    } else {
-        Err(Error::Other("workspaces are not supported yet".to_owned()))
-    }
 }

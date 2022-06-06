@@ -44,7 +44,7 @@ pub fn add_mod_rs(path: impl Into<PathBuf>) -> PathBuf {
     p
 }
 
-pub fn cowfile(orig: &str, with_open: impl Fn(&mut File, &str) -> IoResult<()>) -> Result<()> {
+pub fn cowfile(orig: &str, with_open: impl FnOnce(&mut File, &str) -> IoResult<()>) -> Result<()> {
     // read the old file into memory
     let old_file_contents = fs::read_to_string(orig)?;
     // open the COW file
@@ -55,4 +55,26 @@ pub fn cowfile(orig: &str, with_open: impl Fn(&mut File, &str) -> IoResult<()>) 
     // replace the file
     fs::rename(new, orig)?;
     Ok(())
+}
+
+pub fn validate_module_name(name: &str) -> Result<()> {
+    if name.is_empty() {
+        return Error::bad_module_name();
+    }
+    let first_byte = name.as_bytes()[0];
+    let mut valid_name: bool = true;
+    valid_name &= first_byte.is_ascii_alphabetic() || // first byte must be a Latin alphabet
+        (
+            first_byte == b'_' && // can be an underscore
+            name.len() != 1 // but only if it is followed by something
+        );
+    // all digits must be ASCII alphanumeric or an `_`
+    valid_name &= name
+        .bytes()
+        .all(|b| u8::is_ascii_alphanumeric(&b) || b == b'_');
+    if valid_name {
+        Ok(())
+    } else {
+        Error::bad_module_name()
+    }
 }

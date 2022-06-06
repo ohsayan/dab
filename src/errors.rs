@@ -28,6 +28,16 @@ pub enum Error {
     Other(String),
     CargoTomlError(cargo_toml::Error),
     IoError(IoError),
+    BadModuleName,
+}
+
+impl Error {
+    pub fn other<T>(e: impl ToString) -> Result<T> {
+        Err(Self::Other(e.to_string()))
+    }
+    pub fn bad_module_name<T>() -> Result<T> {
+        Err(Self::BadModuleName)
+    }
 }
 
 impl Display for Error {
@@ -37,6 +47,7 @@ impl Display for Error {
             Error::Other(oe) => write!(f, "{}", oe),
             Error::CargoTomlError(cargo) => write!(f, "failed to read `Cargo.toml`: {}", cargo),
             Error::IoError(ioe) => write!(f, "I/O error: {ioe}"),
+            Error::BadModuleName => write!(f, "bad module name"),
         }
     }
 }

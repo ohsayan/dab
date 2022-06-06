@@ -18,13 +18,14 @@
 use std::{path::Path, process::Command};
 use {
     crate::{
+        runner::ModuleOptions,
         utils::{self, add_mod_rs},
         Error, Result,
     },
     std::{fs, io::Write},
 };
 
-pub fn create_module_in_package(path: &str) -> Result<()> {
+pub fn create_module_in_package(path: &str, options: ModuleOptions) -> Result<()> {
     // find module directory and file paths
     let path_segments: Vec<&str> = path.split("::").collect();
     let has_empty = path_segments.iter().any(|s| s.is_empty());
@@ -46,7 +47,11 @@ pub fn create_module_in_package(path: &str) -> Result<()> {
         fs::File::create(filepath)?;
         // append the module entry to the top of the main.rs file
         utils::cowfile(root_file_name, |file, contents| {
-            let mod_decl = format!("mod {};\n", path_segments[0]);
+            let mod_decl = if options.is_public {
+                format!("pub mod {};\n", path_segments[0])
+            } else {
+                format!("mod {};\n", path_segments[0])
+            };
             file.write_all(mod_decl.as_bytes())?;
             file.write_all(contents.as_bytes())?;
             Ok(())
@@ -59,7 +64,7 @@ pub fn create_module_in_package(path: &str) -> Result<()> {
 
 #[test]
 fn create_module_in_package_test() {
-    create_module_in_package("protocol").unwrap();
+    create_module_in_package("protocol", ModuleOptions::default()).unwrap();
     assert!(Path::new("src/protocol").is_dir());
     assert!(Path::new("src/protocol/mod.rs").is_file());
     let cmd = Command::new("cargo").arg("build").output().unwrap();

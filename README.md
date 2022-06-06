@@ -6,7 +6,7 @@ it does one very simple thing: create modules.
 ## Features
 
 - [x] Create modules in binary/library packages
-- [ ] Choose if module is public/private (private by default)
+- [x] Choose if module is public/private (private by default)
 - [ ] Ignore comments on top of file while adding modules ("license headers")
 - [ ] Support full paths to deeply nested modules
 - [ ] Enable parent creation if it doesn't exist
